@@ -1,0 +1,35 @@
+import logging
+import spacy
+import pandas as pd 
+import azure.functions as func
+from tabulate import tabulate 
+from IPython.display import HTML
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+    
+    #text ="Yeah, then I saw in class to message couple minutes ago, but I'm going to include an invoice number 800193273. This is an invoice for equipment. We do not have on property with no idea if we're ever going to get this stuff from NCR. So I will be just charging back on these charges of thousands of dollars for equipment I don't have.I don't have access to any pool full. I've got no way of getting onto that registering on that. Your message says I have to request access to the portal to search or do anything with billing. Please give me a call back ASAP. First name Simon last name Clark phone number 941-302-8791 thank you."
+    req_body = req.get_json()
+    text = req_body.get('text')
+    print(text)
+
+    nlp = spacy.load("ner_model")
+    doc = nlp(text)
+    entities=[]
+    labels=[]
+    for ent in doc.ents:
+        entities.append(ent)
+        labels.append(ent.label_)
+    df=pd.DataFrame({'Entities':entities, 'Labels':labels})
+    
+
+    result= df.to_html()
+    
+
+    if text:
+        return func.HttpResponse(f"{result}")
+    else:
+        return func.HttpResponse(
+             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+             status_code=200
+        )
